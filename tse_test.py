@@ -8,6 +8,7 @@ from utils import datasets, safe_shape
 from TimeSeriesEstimator import TimeSeriesRegressor, time_series_split, time_series_cv, cascade_cv
 from sklearn.cross_validation import KFold
 
+
 def mse(X1, X2, multioutput='raw_values'):
     if multioutput == 'raw_values':
         return np.mean((X1 - X2)**2, axis=0)**.5
@@ -23,8 +24,9 @@ n_prev = 2
 tsr = TimeSeriesRegressor(LinearRegression(), n_prev=n_prev)
 tsr.fit(X_train)
 fc = tsr.forecast(X_train, len(X_test), noise=.2, n_paths=200)
-fc_mean = tsr.forecast(X_train, len(X_test), noise=.2, n_paths=200, combine='mean')
-#or for speed
+fc_mean = tsr.forecast(X_train, len(X_test), noise=.2,
+                       n_paths=200, combine='mean')
+# or for speed
 #fc_mean = np.mean(fc, axis=0)
 
 plt.plot(np.transpose(fc[:, :, 1]), 'r', alpha=.05)

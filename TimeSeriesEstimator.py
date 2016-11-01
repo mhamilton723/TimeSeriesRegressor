@@ -35,7 +35,8 @@ class TimeSeriesEstimator(BaseEstimator):
         is_pandas = isinstance(dataX, pd.DataFrame)
 
         if dataY is not None:
-            # assert (type(dataX) is type(dataY)) TODO find way to still perform this check
+            # TODO find way to still perform this check
+            # assert (type(dataX) is type(dataY))
             assert (len(dataX) == len(dataY))
 
         dlistX, dlistY = [], []
@@ -43,9 +44,11 @@ class TimeSeriesEstimator(BaseEstimator):
             if is_pandas:
                 dlistX.append(dataX.iloc[i:i + n_prev].as_matrix())
                 if dataY is not None:
-                    dlistY.append(dataY.iloc[i + n_prev - 1 + n_ahead].as_matrix())
+                    dlistY.append(
+                        dataY.iloc[i + n_prev - 1 + n_ahead].as_matrix())
                 else:
-                    dlistY.append(dataX.iloc[i + n_prev - 1 + n_ahead].as_matrix())
+                    dlistY.append(
+                        dataX.iloc[i + n_prev - 1 + n_ahead].as_matrix())
             else:
                 dlistX.append(dataX[i:i + n_prev])
                 if dataY is not None:
@@ -102,7 +105,8 @@ class TimeSeriesEstimator(BaseEstimator):
         X_data, Y_data = self._preprocess(X, Y)
 
         if self.parallel_models and len(Y_data.shape) > 1 and Y_data.shape[1] > 1:
-            self._fit_estimators = [clone(self.base_estimator) for i in range(Y_data.shape[1])]
+            self._fit_estimators = [clone(self.base_estimator)
+                                    for i in range(Y_data.shape[1])]
             for i, estimator in enumerate(self._fit_estimators):
                 estimator.fit(X_data, Y_data[:, i])
         else:
@@ -145,8 +149,9 @@ class TimeSeriesRegressor(TimeSeriesEstimator, RegressorMixin):
         :return:
         '''
         if not (
-            self._is_autocor and self.n_ahead == 1):  # TODO generalize and add exponential weighting on older predictions
-            raise ValueError("Need to be an auto-correlation predictor with n_ahead=1")
+                self._is_autocor and self.n_ahead == 1):  # TODO generalize and add exponential weighting on older predictions
+            raise ValueError(
+                "Need to be an auto-correlation predictor with n_ahead=1")
 
         is_pandas = isinstance(X, pd.DataFrame) or isinstance(X, pd.Series)
         if is_pandas:
@@ -157,8 +162,10 @@ class TimeSeriesRegressor(TimeSeriesEstimator, RegressorMixin):
             out = np.empty((n_steps, X.shape[1]))
             previous = X[-self.n_prev:]
             for i in range(n_steps):
-                next_step = self.predict(np.array([previous.ravel()]), preprocessed=True)
-                out[i, :] = next_step + next_step * np.random.randn(*next_step.shape) * noise
+                next_step = self.predict(
+                    np.array([previous.ravel()]), preprocessed=True)
+                out[i, :] = next_step + next_step * \
+                    np.random.randn(*next_step.shape) * noise
                 previous = np.vstack((previous[1:], next_step))
             outs.append(out)
 
@@ -184,7 +191,8 @@ def time_series_split(X, test_size=.2, number=False, output_numpy=True):
     elif test_size > 1 and number:
         ntrn = int(len(X) - test_size)
     else:
-        raise ValueError("test_size: (frac or Int) and number:(True or False) should be set correctly")
+        raise ValueError(
+            "test_size: (frac or Int) and number:(True or False) should be set correctly")
 
     if is_pandas:
         X_train = X.iloc[0:ntrn]
@@ -209,11 +217,13 @@ def time_series_cv(n, n_folds, test_size=.2):
     :return:
     '''
     out = []
-    split_points = [(n * i / float(n_folds), n * (i + 1) / float(n_folds)) for i in range(n_folds)]
+    split_points = [(n * i / float(n_folds), n * (i + 1) /
+                     float(n_folds)) for i in range(n_folds)]
     split_points = [(int(start), int(end)) for (start, end) in split_points]
     for start, end in split_points:
         ntrn = int((end - start) * (1 - test_size))
-        out.append((list(range(start, start + ntrn)), list(range(start + ntrn, end))))
+        out.append((list(range(start, start + ntrn)),
+                    list(range(start + ntrn, end))))
     return out
 
 
@@ -229,7 +239,8 @@ def cascade_cv(n, n_folds, data_size=.8, test_size=.15, number=False):
     pairs = []
     shift = int(round((1 - data_size) * n / float(n_folds)))
     if shift < 4:
-        raise (UserWarning("Small Shift warning: Consider less folds, or a smaller data size"))
+        raise (UserWarning(
+            "Small Shift warning: Consider less folds, or a smaller data size"))
     for i in range(n_folds):
         start = shift * i
         end = min(start + int(data_size * n), n)
@@ -239,7 +250,9 @@ def cascade_cv(n, n_folds, data_size=.8, test_size=.15, number=False):
         elif test_size > 1 and number:
             ntrn = int(n * data_size - test_size)
         else:
-            raise ValueError("test_size: (frac or Int) and number:(True or False) should be set correctly")
+            raise ValueError(
+                "test_size: (frac or Int) and number:(True or False) should be set correctly")
 
-        pairs.append((list(range(start, start + ntrn)), list(range(start + ntrn, end))))
+        pairs.append((list(range(start, start + ntrn)),
+                      list(range(start + ntrn, end))))
     return pairs

@@ -1,5 +1,5 @@
 #import pandas.io.data as web
-# pandas.io.data is going to be deprecated. The library is moving to a 
+# pandas.io.data is going to be deprecated. The library is moving to a
 # stand-alone package, pandas-datareader.
 import pandas_datareader.data as web
 from datetime import datetime
@@ -11,11 +11,11 @@ import pandas as pd
 import sys
 
 
-def access(dictionary,keys):
+def access(dictionary, keys):
     return [dictionary[key] for key in keys]
 
 
-def safe_shape(array,i):
+def safe_shape(array, i):
     try:
         return array.shape[i]
     except IndexError:
@@ -34,12 +34,14 @@ def mse(X1, X2, multioutput='raw_values'):
 
 def datasets(name, tickers=None, log=False):
     if name == "sp500":
-        ##### Real Stock Data
-        if log: print('Using sp500 data')
+        # Real Stock Data
+        if log:
+            print('Using sp500 data')
         data = load_s_and_p_data(start="2014-1-1", tickers=tickers)
     elif name == "synthetic":
-        ##### Synthetic data for testing purposes
-        if log: print('Using Synthetic data')
+        # Synthetic data for testing purposes
+        if log:
+            print('Using Synthetic data')
         values = 10000
         s = pd.Series(range(values))
         noise = pd.Series(np.random.randn(values))
@@ -47,26 +49,29 @@ def datasets(name, tickers=None, log=False):
         d = {'one': s * s * 100 / values,
              'two': np.sin(s * 10.),
              'three': np.cos(s * 10),
-             'four': np.sin(s * s / 10) * np.sqrt(abs(s)+.002)}
+             'four': np.sin(s * s / 10) * np.sqrt(abs(s) + .002)}
         data = pd.DataFrame(d)
     elif name == "jigsaw":
-        ##### Easy synthetic data for testing purposes
-        if log: print('Using jigsaw data')
+        # Easy synthetic data for testing purposes
+        if log:
+            print('Using jigsaw data')
         flow = (list(range(1, 10, 1)) + list(range(10, 1, -1))) * 1000
         pdata = pd.DataFrame({"a": flow, "b": flow})
         pdata.b = pdata.b.shift(9)
         data = pdata.iloc[10:] * random.random()  # some noise
     elif name == "linear":
-        ##### Easy synthetic data for testing purposes
-        if log: print('Using linear data')
+        # Easy synthetic data for testing purposes
+        if log:
+            print('Using linear data')
         flow = list(range(0, 10000, 2))
         pdata = pd.DataFrame({"a": flow, "b": flow})
         pdata.b = pdata.b + .5
         data = pdata
-        #pdata.iloc[10:] * random.random()  # some noise
+        # pdata.iloc[10:] * random.random()  # some noise
     elif name == "autocorr":
-        ##### Easy synthetic data for testing purposes
-        if log: print('Using autocorr data')
+        # Easy synthetic data for testing purposes
+        if log:
+            print('Using autocorr data')
         flow1 = gen_linear_seq(1.01, .002)
         flow2 = gen_linear_seq(1.02, .001)
         pdata = pd.DataFrame({"a": flow1, "b": flow2})
@@ -90,10 +95,11 @@ def cache(cache_file):
         def func_wrapper(*args, **kwargs):
             if os.path.exists(cache_file):
                 if sys.version_info[0] < 3:
-                    loaded_args, loaded_kwargs, loaded_data = pickle.load(open(cache_file, 'r'))
+                    loaded_args, loaded_kwargs, loaded_data = pickle.load(
+                        open(cache_file, 'r'))
                 else:
                     # for python 3.x to read a file pickled by python 2.x
-                    loaded_args, loaded_kwargs, loaded_data = pickle.load(open(cache_file, 'rb'), 
+                    loaded_args, loaded_kwargs, loaded_data = pickle.load(open(cache_file, 'rb'),
                                                                           encoding='latin1')
                 load_success = True
             else:
@@ -113,6 +119,7 @@ def cache(cache_file):
         return func_wrapper
     return cache_decorator
 
+
 @cache("data/stock_data_cache.pkl")
 def get_data(tickers, start="2014-1-1", end="2015-11-02"):
     start_time = datetime.strptime(start, "%Y-%m-%d")
@@ -122,6 +129,7 @@ def get_data(tickers, start="2014-1-1", end="2015-11-02"):
     # df = df.diff()
     # df = df.iloc[1:len(df),:]
     return df
+
 
 @cache("data/sp500_data_cache.pkl")
 def load_s_and_p_data(start="2009-1-1", end="2015-11-02",
@@ -141,6 +149,7 @@ def load_s_and_p_data(start="2009-1-1", end="2015-11-02",
 
     return data
 
+
 @cache("data/sp500_names_cache.pkl")
 def s_and_p_names(start="2009-1-1", end="2015-11-02",
                   ticker_names="data/s_and_p_500_names.csv",
@@ -153,7 +162,6 @@ def s_and_p_names(start="2009-1-1", end="2015-11-02",
         data = data.dropna(axis=2)
 
     return list(data['Adj Close'].columns.values)
-
 
 
 def window_dataset(data, n_prev=1):
@@ -179,7 +187,8 @@ def masked_dataset(data, n_prev=3, n_masked=2, predict_ahead=1):
         x_mask = np.zeros((n_masked, x.shape[1]))
         docX.append(np.concatenate((x, x_mask)))
 
-        y = data.iloc[i + predict_ahead: i + n_prev + n_masked + predict_ahead].as_matrix()
+        y = data.iloc[i + predict_ahead: i + n_prev +
+                      n_masked + predict_ahead].as_matrix()
         docY.append(y)
     alsX = np.array(docX)
     alsY = np.array(docY)
@@ -242,12 +251,14 @@ def forecast_old(model, seed, n_points=300, percent_noise=.002):
 
     for i in range(n_points):
         y_pred = model.predict(values[[i], :])[0]
-        y_pred = np.array([[y + y * (.5 - random.random()) * percent_noise for y in y_pred]])
+        y_pred = np.array(
+            [[y + y * (.5 - random.random()) * percent_noise for y in y_pred]])
 
         output[i, :] = y_pred
         if i < n_points - 1:
             if len(seed.shape) > 2:
-                print(values[i + 1, :].shape, values[i, 1:, :].shape, y_pred.shape)
+                print(values[i + 1, :].shape,
+                      values[i, 1:, :].shape, y_pred.shape)
                 values[i + 1, :] = np.hstack((values[i, 1:, :], y_pred))
             else:
                 values[i + 1, :] = y_pred
